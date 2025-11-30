@@ -4,16 +4,18 @@ import Foundation
 public final class TimerEngine: ObservableObject {
     @Published private(set) var timers: [UUID: TimerEntry]
 
+    private var timersStorage: [UUID: TimerEntry]
     private var timerSources: [UUID: DispatchSourceTimer] = [:]
     private let queue = DispatchQueue(label: "com.example.better-timer.engine")
 
     public init(timers: [TimerEntry] = []) {
-        self.timers = Dictionary(uniqueKeysWithValues: timers.map { ($0.id, $0) })
+        self.timersStorage = Dictionary(uniqueKeysWithValues: timers.map { ($0.id, $0) })
+        self.timers = timersStorage
     }
 
     public func start(timerID: UUID) {
         queue.async { [weak self] in
-            guard let self, var entry = self.timers[timerID] else { return }
+            guard let self, var entry = self.timersStorage[timerID] else { return }
 
             self.invalidateTimer(for: timerID)
 
@@ -40,7 +42,7 @@ public final class TimerEngine: ObservableObject {
 
     public func pause(timerID: UUID) {
         queue.async { [weak self] in
-            guard let self, var entry = self.timers[timerID] else { return }
+            guard let self, var entry = self.timersStorage[timerID] else { return }
             self.invalidateTimer(for: timerID)
             entry.state = .paused
             self.update(entry)
@@ -49,7 +51,7 @@ public final class TimerEngine: ObservableObject {
 
     public func reset(timerID: UUID) {
         queue.async { [weak self] in
-            guard let self, var entry = self.timers[timerID] else { return }
+            guard let self, var entry = self.timersStorage[timerID] else { return }
             self.invalidateTimer(for: timerID)
             entry.remainingSeconds = entry.totalSeconds
             entry.state = .idle
@@ -59,12 +61,14 @@ public final class TimerEngine: ObservableObject {
 
     public func setTimers(_ entries: [TimerEntry]) {
         queue.async { [weak self] in
-            self?.timers = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+            guard let self else { return }
+            self.timersStorage = Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) })
+            self.publishTimers()
         }
     }
 
     private func tick(timerID: UUID) {
-        guard var entry = timers[timerID] else { return }
+        guard var entry = timersStorage[timerID] else { return }
 
         guard entry.remainingSeconds > 0 else {
             entry.state = .completed
@@ -89,9 +93,14 @@ public final class TimerEngine: ObservableObject {
     }
 
     private func update(_ entry: TimerEntry) {
-        timers[entry.id] = entry
+        timersStorage[entry.id] = entry
+        publishTimers()
+    }
+
+    private func publishTimers() {
+        let snapshot = timersStorage
         DispatchQueue.main.async { [weak self] in
-            self?.timers[entry.id] = entry
+            self?.timers = snapshot
         }
     }
 }
