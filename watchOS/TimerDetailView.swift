@@ -25,8 +25,9 @@ struct TimerDetailView: View {
 
                 VStack(spacing: 6) {
                     Text(formattedRemaining(timer.remainingSeconds))
-                        .font(.system(.title, design: .rounded))
+                        .font(.title2)
                         .monospacedDigit()
+                        .accessibilityLabel("\(formattedRemaining(timer.remainingSeconds)) remaining")
                     ProgressView(value: progress)
                 }
 
@@ -34,11 +35,14 @@ struct TimerDetailView: View {
                     Button(timer.state == .running ? "Pause" : "Start") {
                         toggleTimer(for: timer)
                     }
+                    .accessibilityLabel(timer.state == .running ? "Pause timer" : "Start timer")
+                    .accessibilityHint(timer.state == .running ? "Pauses the countdown" : "Starts the countdown")
                     .tint(timer.state == .running ? .yellow : .green)
 
                     Button("Reset") {
                         timerController.reset(timerID: timer.id)
                     }
+                    .accessibilityHint("Resets the timer to its full duration")
                     .tint(.red)
                 }
                 .buttonStyle(.bordered)

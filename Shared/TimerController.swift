@@ -5,6 +5,10 @@ import ActivityKit
 #endif
 #if os(iOS)
 import BackgroundTasks
+import UIKit
+#endif
+#if os(watchOS)
+import WatchKit
 #endif
 
 public final class TimerController: ObservableObject {
@@ -67,11 +71,13 @@ public final class TimerController: ObservableObject {
         backgroundScheduler.scheduleRefresh()
 #endif
         engine.start(timerID: timerID)
+        triggerHaptic(for: .start)
     }
 
     public func pause(timerID: UUID) {
         NotificationManager.shared.cancelNotification(for: timerID)
         engine.pause(timerID: timerID)
+        triggerHaptic(for: .pause)
     }
 
     public func reset(timerID: UUID) {
@@ -117,6 +123,9 @@ public final class TimerController: ObservableObject {
                         self.liveActivity = nil
                         self.activityID = nil
                         NotificationManager.shared.presentCompletionNotification(for: entry)
+                        await MainActor.run {
+                            self.triggerHaptic(for: .complete)
+                        }
                     }
                 }
                 return
@@ -126,7 +135,46 @@ public final class TimerController: ObservableObject {
 
         if entry.state == .completed {
             NotificationManager.shared.presentCompletionNotification(for: entry)
+            triggerHaptic(for: .complete)
         }
+    }
+
+    private func triggerHaptic(for event: TimerHapticEvent) {
+#if os(iOS)
+        DispatchQueue.main.async {
+            let generator = UINotificationFeedbackGenerator()
+            switch event {
+            case .start:
+                generator.notificationOccurred(.success)
+            case .pause:
+                generator.notificationOccurred(.warning)
+            case .complete:
+                generator.notificationOccurred(.success)
+            }
+        }
+#elseif os(watchOS)
+        DispatchQueue.main.async {
+            let hapticType: WKHapticType
+            switch event {
+            case .start:
+                hapticType = .start
+            case .pause:
+                hapticType = .stop
+            case .complete:
+                hapticType = .success
+            }
+
+            WKInterfaceDevice.current().play(hapticType)
+        }
+#else
+        break
+#endif
+    }
+
+    private enum TimerHapticEvent {
+        case start
+        case pause
+        case complete
     }
 
 #if canImport(ActivityKit)
