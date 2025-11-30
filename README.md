@@ -51,6 +51,15 @@ You want all targets to share data using the same App Group.
 5. Add a new App Group identifier, for example: `group.com.yourname.bettertimer`.
 6. Repeat for **every** target so they all use the identical App Group ID.
 
+### Add the App Intents capability (for Siri & Shortcuts)
+The App Intents capability lets your timers show up as actions inside the **Shortcuts** app and Siri. You only have to enable the capability (no extra target is required).
+
+1. In the project navigator, select the **iOS app target**.
+2. Open the **Signing & Capabilities** tab.
+3. Click the **+ Capability** button and choose **App Intents**.
+4. If you have a watchOS target, repeat the same steps there so Shortcuts can run on Apple Watch too.
+5. Build once (⌘B) so Xcode generates the App Intents entitlement.
+
 ## 4) Verify shared group in code (optional)
 After capabilities are set, you can access the App Group container with:
 ```swift
