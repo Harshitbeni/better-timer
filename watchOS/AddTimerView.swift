@@ -32,6 +32,8 @@ struct AddTimerView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityLabel("Cancel new timer")
+                    .accessibilityHint("Closes without saving")
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -41,6 +43,8 @@ struct AddTimerView: View {
                         dismiss()
                     }
                     .disabled(totalSeconds <= 0)
+                    .accessibilityLabel("Add timer")
+                    .accessibilityHint("Saves the timer and starts from idle")
                 }
             }
         }

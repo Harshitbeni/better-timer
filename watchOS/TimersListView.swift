@@ -29,28 +29,37 @@ struct TimersListView: View {
                             NavigationLink {
                                 TimerDetailView(timerID: timer.id, timerController: timerController)
                             } label: {
-                                HStack {
-                                    VStack(alignment: .leading) {
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    VStack(alignment: .leading, spacing: 2) {
                                         Text(timer.title)
                                             .font(.headline)
+                                            .foregroundStyle(.primary)
+                                            .lineLimit(2)
+
                                         Text(formattedRemaining(timer.remainingSeconds))
-                                            .font(.caption)
+                                            .font(.title2)
+                                            .monospacedDigit()
                                             .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.7)
                                     }
 
                                     Spacer()
 
                                     if timer.state == .running {
                                         Image(systemName: "play.circle.fill")
-                                            .foregroundStyle(.green)
+                                            .foregroundStyle(.tint)
                                     } else if timer.state == .paused {
                                         Image(systemName: "pause.circle")
-                                            .foregroundStyle(.yellow)
+                                            .foregroundStyle(.tint)
                                     } else if timer.state == .completed {
                                         Image(systemName: "checkmark.circle")
-                                            .foregroundStyle(.blue)
+                                            .foregroundStyle(.tint)
                                     }
                                 }
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel("\(timer.title), \(formattedRemaining(timer.remainingSeconds)) remaining")
+                                .accessibilityHint("Opens timer details")
                             }
                         }
                     }
@@ -79,6 +88,8 @@ struct TimersListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel("Add timer")
+                    .accessibilityHint("Create a new countdown")
                 }
             }
             .sheet(isPresented: $isPresentingAddTimer) {
