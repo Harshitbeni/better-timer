@@ -10,8 +10,13 @@ public final class TimerStore {
     private let decoder = JSONDecoder()
     private let userDefaults: UserDefaults
 
-    public init(appGroupIdentifier: String = AppGroup.containerIdentifier) {
-        if let defaults = UserDefaults(suiteName: appGroupIdentifier) {
+    public init(
+        userDefaults: UserDefaults? = nil,
+        appGroupIdentifier: String = AppGroup.containerIdentifier
+    ) {
+        if let userDefaults {
+            self.userDefaults = userDefaults
+        } else if let defaults = UserDefaults(suiteName: appGroupIdentifier) {
             self.userDefaults = defaults
         } else {
             self.userDefaults = .standard
