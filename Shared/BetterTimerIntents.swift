@@ -11,7 +11,7 @@ struct StartTimerIntent: AppIntent {
     var name: String
 
     func perform() async throws -> some IntentResult {
-        let controller = TimerController()
+        let controller = TimerController.shared
         guard let entry = controller.timers.first(where: { $0.title.caseInsensitiveCompare(name) == .orderedSame }) else {
             return .result(value: "No timer named \(name) was found.")
         }
@@ -30,7 +30,7 @@ struct PauseTimerIntent: AppIntent {
     var name: String
 
     func perform() async throws -> some IntentResult {
-        let controller = TimerController()
+        let controller = TimerController.shared
         guard let entry = controller.timers.first(where: { $0.title.caseInsensitiveCompare(name) == .orderedSame }) else {
             return .result(value: "No timer named \(name) was found.")
         }
@@ -49,7 +49,7 @@ struct ResetTimerIntent: AppIntent {
     var name: String
 
     func perform() async throws -> some IntentResult {
-        let controller = TimerController()
+        let controller = TimerController.shared
         guard let entry = controller.timers.first(where: { $0.title.caseInsensitiveCompare(name) == .orderedSame }) else {
             return .result(value: "No timer named \(name) was found.")
         }
@@ -81,7 +81,7 @@ struct CreateTimerIntent: AppIntent {
             return .result(value: "Please provide a duration greater than zero.")
         }
 
-        let controller = TimerController()
+        let controller = TimerController.shared
         controller.addTimer(title: sanitizedName, totalSeconds: totalSeconds)
 
         return .result(value: "Created timer \(sanitizedName) for \(duration) minute(s)")
