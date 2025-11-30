@@ -73,13 +73,14 @@ final class TimerEngineTests: XCTestCase {
 
     // Helper to safely look up the latest published value from the main thread.
     private func remainingSeconds(for id: UUID, in engine: TimerEngine) -> Int? {
-        var value: Int?
-        let semaphore = DispatchSemaphore(value: 0)
-        DispatchQueue.main.async {
-            value = engine.timers[id]?.remainingSeconds
-            semaphore.signal()
+        if Thread.isMainThread {
+            return engine.timers[id]?.remainingSeconds
         }
-        semaphore.wait()
+
+        var value: Int?
+        DispatchQueue.main.sync {
+            value = engine.timers[id]?.remainingSeconds
+        }
         return value
     }
 }
