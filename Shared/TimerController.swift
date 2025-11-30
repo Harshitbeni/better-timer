@@ -36,6 +36,14 @@ public final class TimerController: ObservableObject {
         engine.reset(timerID: timerID)
     }
 
+    public func addTimer(title: String, totalSeconds: Int) {
+        guard totalSeconds > 0 else { return }
+        var updatedTimers = timers
+        let newEntry = TimerEntry(title: title, totalSeconds: totalSeconds)
+        updatedTimers.append(newEntry)
+        setTimers(updatedTimers)
+    }
+
     public func setTimers(_ entries: [TimerEntry]) {
         timers = entries
         engine.setTimers(entries)
