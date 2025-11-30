@@ -8,6 +8,8 @@ public final class TimerEngine: ObservableObject {
     private var timerSources: [UUID: DispatchSourceTimer] = [:]
     private let queue = DispatchQueue(label: "com.example.better-timer.engine")
 
+    var onTick: ((TimerEntry) -> Void)?
+
     public init(timers: [TimerEntry] = []) {
         self.timersStorage = Dictionary(uniqueKeysWithValues: timers.map { ($0.id, $0) })
         self.timers = timersStorage
@@ -73,6 +75,7 @@ public final class TimerEngine: ObservableObject {
         guard entry.remainingSeconds > 0 else {
             entry.state = .completed
             invalidateTimer(for: timerID)
+            onTick?(entry)
             update(entry)
             return
         }
@@ -84,6 +87,7 @@ public final class TimerEngine: ObservableObject {
             invalidateTimer(for: timerID)
         }
 
+        onTick?(entry)
         update(entry)
     }
 
