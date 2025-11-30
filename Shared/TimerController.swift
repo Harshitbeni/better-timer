@@ -112,7 +112,8 @@ public final class TimerController: ObservableObject {
 
     @available(iOS 16.1, *)
     private func handleTick(for entry: TimerEntry) {
-        guard let activity = liveActivity else { return }
+        guard let activity = liveActivity,
+              activity.attributes.timerID == entry.id else { return }
 
         Task {
             let state = BetterTimerActivityState(
