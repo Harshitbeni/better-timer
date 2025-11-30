@@ -3,6 +3,9 @@ import Foundation
 #if canImport(ActivityKit)
 import ActivityKit
 #endif
+#if os(iOS)
+import BackgroundTasks
+#endif
 
 public final class TimerController: ObservableObject {
     public static let shared = TimerController()
@@ -20,12 +23,17 @@ public final class TimerController: ObservableObject {
     private let store: TimerStore
     private let engine: TimerEngine
     private var cancellables: Set<AnyCancellable> = []
+#if os(iOS)
+    private let backgroundScheduler = BackgroundRefreshScheduler.shared
+#endif
 
     public init(store: TimerStore = TimerStore()) {
         self.store = store
         let savedTimers = store.loadTimers()
         self.engine = TimerEngine(timers: savedTimers)
         self.timers = savedTimers
+
+        NotificationManager.shared.requestAuthorizationIfNeeded()
 
         engine.$timers
             .map { Array($0.values).sorted { $0.title < $1.title } }
@@ -36,10 +44,11 @@ public final class TimerController: ObservableObject {
             }
             .store(in: &cancellables)
 
-#if canImport(ActivityKit)
         engine.onTick = { [weak self] entry in
             self?.handleTick(for: entry)
         }
+#if os(iOS)
+        backgroundScheduler.scheduleRefresh()
 #endif
     }
 
@@ -51,10 +60,17 @@ public final class TimerController: ObservableObject {
             }
         }
 #endif
+        if let entry = timers.first(where: { $0.id == timerID }) {
+            NotificationManager.shared.scheduleCompletionNotification(for: entry)
+        }
+#if os(iOS)
+        backgroundScheduler.scheduleRefresh()
+#endif
         engine.start(timerID: timerID)
     }
 
     public func pause(timerID: UUID) {
+        NotificationManager.shared.cancelNotification(for: timerID)
         engine.pause(timerID: timerID)
     }
 
@@ -64,6 +80,7 @@ public final class TimerController: ObservableObject {
             endLiveActivity()
         }
 #endif
+        NotificationManager.shared.cancelNotification(for: timerID)
         engine.reset(timerID: timerID)
     }
 
@@ -79,6 +96,37 @@ public final class TimerController: ObservableObject {
         timers = entries
         engine.setTimers(entries)
         store.saveTimers(entries)
+    }
+
+    private func handleTick(for entry: TimerEntry) {
+#if canImport(ActivityKit)
+        if #available(iOS 16.1, *) {
+            if let activity = liveActivity,
+               activity.attributes.timerID == entry.id {
+                Task {
+                    let state = BetterTimerActivityState(
+                        remainingSeconds: entry.remainingSeconds,
+                        title: entry.title,
+                        isRunning: entry.state == .running
+                    )
+
+                    await activity.update(using: state)
+
+                    if entry.state == .completed {
+                        await activity.end(using: state, dismissalPolicy: .immediate)
+                        self.liveActivity = nil
+                        self.activityID = nil
+                        NotificationManager.shared.presentCompletionNotification(for: entry)
+                    }
+                }
+                return
+            }
+        }
+#endif
+
+        if entry.state == .completed {
+            NotificationManager.shared.presentCompletionNotification(for: entry)
+        }
     }
 
 #if canImport(ActivityKit)
@@ -109,28 +157,6 @@ public final class TimerController: ObservableObject {
             activityID = activity.id
         } catch {
             // In a production app this should be logged
-        }
-    }
-
-    @available(iOS 16.1, *)
-    private func handleTick(for entry: TimerEntry) {
-        guard let activity = liveActivity,
-              activity.attributes.timerID == entry.id else { return }
-
-        Task {
-            let state = BetterTimerActivityState(
-                remainingSeconds: entry.remainingSeconds,
-                title: entry.title,
-                isRunning: entry.state == .running
-            )
-
-            await activity.update(using: state)
-
-            if entry.state == .completed {
-                await activity.end(using: state, dismissalPolicy: .immediate)
-                self.liveActivity = nil
-                self.activityID = nil
-            }
         }
     }
 
