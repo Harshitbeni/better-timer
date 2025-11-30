@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TimersListView: View {
     @ObservedObject var timerController: TimerController
+    @State private var isPresentingAddTimer = false
 
     private var nextTimer: TimerEntry? {
         timerController.timers
@@ -17,7 +18,7 @@ struct TimersListView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("No timers yet")
                             .font(.headline)
-                        Text("Add timers on your other devices to see them here.")
+                        Text("Add timers on your watch to get started.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -71,6 +72,19 @@ struct TimersListView: View {
                 }
             }
             .navigationTitle("Timers")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isPresentingAddTimer = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $isPresentingAddTimer) {
+                AddTimerView(timerController: timerController)
+                    .presentationDetents([.medium])
+            }
         }
     }
 
