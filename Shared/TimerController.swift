@@ -167,7 +167,7 @@ public final class TimerController: ObservableObject {
             WKInterfaceDevice.current().play(hapticType)
         }
 #else
-        break
+        return
 #endif
     }
 
