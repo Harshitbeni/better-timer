@@ -5,6 +5,8 @@ import ActivityKit
 #endif
 
 public final class TimerController: ObservableObject {
+    public static let shared = TimerController()
+
     @Published public private(set) var timers: [TimerEntry]
 
 #if canImport(ActivityKit)
