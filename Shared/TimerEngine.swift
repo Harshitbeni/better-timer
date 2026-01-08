@@ -6,7 +6,7 @@ public final class TimerEngine: ObservableObject {
 
     private var timersStorage: [UUID: TimerEntry]
     private var timerSources: [UUID: DispatchSourceTimer] = [:]
-    private let queue = DispatchQueue(label: "com.example.better-timer.engine")
+    private let queue = DispatchQueue(label: Config.timerQueueIdentifier)
 
     var onTick: ((TimerEntry) -> Void)?
 

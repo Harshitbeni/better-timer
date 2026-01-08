@@ -1,7 +1,14 @@
+//
+//  BetterTimerApp.swift
+//  BetterTimer (iOS)
+//
+//  Main app entry point for iOS
+//
+
 import SwiftUI
 
 @main
-struct BetterTimerWatchApp: App {
+struct BetterTimerApp: App {
     init() {
         Config.validate()
     }

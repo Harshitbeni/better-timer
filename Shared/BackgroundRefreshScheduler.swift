@@ -5,7 +5,7 @@ import Foundation
 public final class BackgroundRefreshScheduler {
     public static let shared = BackgroundRefreshScheduler()
 
-    private let taskIdentifier = "com.example.better-timer.refresh"
+    private let taskIdentifier = Config.backgroundTaskIdentifier
 
     private init() {
         registerTask()
@@ -17,8 +17,9 @@ public final class BackgroundRefreshScheduler {
 
         do {
             try BGTaskScheduler.shared.submit(request)
+            Config.logger.info("Background refresh scheduled")
         } catch {
-            // In a production app this should be logged
+            Config.logger.error("Failed to schedule background refresh: \(error.localizedDescription)")
         }
     }
 
@@ -26,10 +27,12 @@ public final class BackgroundRefreshScheduler {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskIdentifier, using: nil) { task in
             self.handleRefresh(task: task as? BGAppRefreshTask)
         }
+        Config.logger.info("Background task registered with identifier: \(taskIdentifier)")
     }
 
     private func handleRefresh(task: BGAppRefreshTask?) {
         task?.expirationHandler = { [weak task] in
+            Config.logger.warning("Background refresh task expired")
             task?.setTaskCompleted(success: false)
         }
 
