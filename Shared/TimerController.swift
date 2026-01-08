@@ -45,6 +45,11 @@ public final class TimerController: ObservableObject {
             .sink { [weak self] entries in
                 self?.timers = entries
                 self?.store.saveTimers(entries)
+
+                // Push to CloudKit in background
+                Task {
+                    await self?.store.pushToCloud(entries)
+                }
             }
             .store(in: &cancellables)
 
@@ -54,6 +59,20 @@ public final class TimerController: ObservableObject {
 #if os(iOS)
         backgroundScheduler.scheduleRefresh()
 #endif
+
+        // Perform initial CloudKit sync
+        Task {
+            await syncWithCloud()
+        }
+    }
+
+    /// Syncs timers with CloudKit
+    public func syncWithCloud() async {
+        let syncedTimers = await store.syncWithCloud()
+        await MainActor.run {
+            self.timers = syncedTimers
+            self.engine.setTimers(syncedTimers)
+        }
     }
 
     public func start(timerID: UUID) {
@@ -99,9 +118,21 @@ public final class TimerController: ObservableObject {
     }
 
     public func setTimers(_ entries: [TimerEntry]) {
+        // Find deleted timer IDs
+        let oldIDs = Set(timers.map { $0.id })
+        let newIDs = Set(entries.map { $0.id })
+        let deletedIDs = oldIDs.subtracting(newIDs)
+
         timers = entries
         engine.setTimers(entries)
         store.saveTimers(entries)
+
+        // Delete from CloudKit in background
+        Task {
+            for deletedID in deletedIDs {
+                await store.deleteFromCloud(id: deletedID)
+            }
+        }
     }
 
     private func handleTick(for entry: TimerEntry) {
@@ -203,8 +234,9 @@ public final class TimerController: ObservableObject {
             )
             liveActivity = activity
             activityID = activity.id
+            Config.logger.info("Live Activity started for timer: \(entry.title)")
         } catch {
-            // In a production app this should be logged
+            Config.logger.error("Failed to start Live Activity: \(error.localizedDescription)")
         }
     }
 
