@@ -138,10 +138,33 @@ Delete these default files Xcode created (they're replaced by our files):
 
 ### Configure Info.plist
 
-1. Select `Info.plist` in Project Navigator
+**IMPORTANT:** You can use the provided `iOS/Info.plist` file or create your own following these steps:
 
-2. Add new entry:
+1. If using the provided file:
+   - In Xcode, right-click on the **BetterTimer** (iOS) folder
+   - Select **Add Files to "BetterTimer"**
+   - Navigate to and select `iOS/Info.plist`
+   - Ensure it's added to the iOS target only
+   - Skip to Step 3 (Add macOS Target)
+
+2. If creating manually in Xcode:
+   - Select `Info.plist` in Project Navigator
+   - Add these entries:
+
+   **Live Activities Support (REQUIRED for Live Activities):**
    - Right-click in the list → **Add Row**
+   - Key: **Supports Live Activities** (or `NSSupportsLiveActivities`)
+   - Type: Boolean
+   - Value: YES
+
+   **Live Activities Frequent Updates (Recommended):**
+   - Add Row
+   - Key: **Supports Live Activities Frequent Updates** (or `NSSupportsLiveActivitiesFrequentUpdates`)
+   - Type: Boolean
+   - Value: YES
+
+   **Background Task Scheduler:**
+   - Add Row
    - Key: **Permitted background task scheduler identifiers** (or `BGTaskSchedulerPermittedIdentifiers`)
    - Type: Array
    - Add item 0: `com.yourteam.better-timer.refresh`
@@ -319,9 +342,14 @@ See [ICLOUD_SETUP.md](ICLOUD_SETUP.md) for detailed CloudKit configuration.
 - Ensure App Group ID matches Config.swift
 
 **Live Activities not showing (iOS)**
-- Only works on iOS 16.1+ physical devices
-- Check notification permissions
-- Verify Live Activities are enabled in Settings
+- **CRITICAL:** Add `NSSupportsLiveActivities = YES` to Info.plist (see Step 2)
+- Only works on iOS 16.1+ (limited support in simulator)
+- Test on a **physical iPhone** for best results
+- Check Settings → [App Name] → Allow Live Activities
+- Verify notification permissions are granted
+- Check Xcode console for activity-related errors
+- Ensure ActivityKit framework is imported correctly
+- Live Activities may not appear in simulator even when configured correctly
 
 ### Signing Issues
 
