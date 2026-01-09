@@ -3,7 +3,7 @@ import AppIntents
 import Foundation
 
 @MainActor
-@available(iOS 17.0, macOS 14.0, watchOS 10.0)
+@available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
 struct StartTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "Start Timer"
 
@@ -22,7 +22,7 @@ struct StartTimerIntent: AppIntent {
 }
 
 @MainActor
-@available(iOS 17.0, macOS 14.0, watchOS 10.0)
+@available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
 struct PauseTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "Pause Timer"
 
@@ -41,7 +41,7 @@ struct PauseTimerIntent: AppIntent {
 }
 
 @MainActor
-@available(iOS 17.0, macOS 14.0, watchOS 10.0)
+@available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
 struct ResetTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "Reset Timer"
 
@@ -60,7 +60,7 @@ struct ResetTimerIntent: AppIntent {
 }
 
 @MainActor
-@available(iOS 17.0, macOS 14.0, watchOS 10.0)
+@available(iOS 17.0, macOS 14.0, watchOS 10.0, *)
 struct CreateTimerIntent: AppIntent {
     static var title: LocalizedStringResource = "Create Timer"
 

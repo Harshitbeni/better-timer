@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import os
 
 public final class TimerStore: ObservableObject {
     private let timersKey = "timers"
@@ -7,7 +8,7 @@ public final class TimerStore: ObservableObject {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private let userDefaults: UserDefaults
-    private let cloudKitSync: CloudKitSyncManager
+    private let cloudKitSync: CloudKitSyncManager?
     private let enableCloudSync: Bool
 
     @Published public private(set) var isSyncing = false
@@ -19,7 +20,7 @@ public final class TimerStore: ObservableObject {
         enableCloudSync: Bool = true
     ) {
         self.enableCloudSync = enableCloudSync
-        self.cloudKitSync = CloudKitSyncManager.shared
+        self.cloudKitSync = enableCloudSync ? CloudKitSyncManager.shared : nil
 
         if let userDefaults {
             self.userDefaults = userDefaults
@@ -65,7 +66,7 @@ public final class TimerStore: ObservableObject {
     /// Syncs timers with CloudKit
     /// Returns merged timers from both local and cloud
     public func syncWithCloud() async -> [TimerEntry] {
-        guard enableCloudSync, cloudKitSync.isCloudKitAvailable else {
+        guard enableCloudSync, let cloudKitSync = cloudKitSync, cloudKitSync.isCloudKitAvailable else {
             Config.logger.info("CloudKit sync disabled or unavailable, using local timers only")
             return loadTimers()
         }
@@ -103,7 +104,7 @@ public final class TimerStore: ObservableObject {
 
     /// Pushes local timers to CloudKit
     public func pushToCloud(_ timers: [TimerEntry]) async {
-        guard enableCloudSync, cloudKitSync.isCloudKitAvailable else {
+        guard enableCloudSync, let cloudKitSync = cloudKitSync, cloudKitSync.isCloudKitAvailable else {
             return
         }
 
@@ -119,7 +120,7 @@ public final class TimerStore: ObservableObject {
 
     /// Deletes a timer from CloudKit
     public func deleteFromCloud(id: UUID) async {
-        guard enableCloudSync, cloudKitSync.isCloudKitAvailable else {
+        guard enableCloudSync, let cloudKitSync = cloudKitSync, cloudKitSync.isCloudKitAvailable else {
             return
         }
 
@@ -157,4 +158,3 @@ public final class TimerStore: ObservableObject {
         return Array(timerDict.values).sorted { $0.createdAt > $1.createdAt }
     }
 }
-

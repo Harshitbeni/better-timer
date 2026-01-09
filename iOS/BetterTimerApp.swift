@@ -14,7 +14,10 @@ struct BetterTimerApp: App {
     }
 
     @StateObject private var timerController = TimerController(
-        store: TimerStore(appGroupIdentifier: Config.appGroupIdentifier)
+        store: TimerStore(
+            appGroupIdentifier: Config.appGroupIdentifier,
+            enableCloudSync: false  // ADD THIS LINE
+        )
     )
 
     var body: some Scene {

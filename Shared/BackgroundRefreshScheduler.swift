@@ -1,6 +1,7 @@
 #if os(iOS)
 import BackgroundTasks
 import Foundation
+import os 
 
 public final class BackgroundRefreshScheduler {
     public static let shared = BackgroundRefreshScheduler()
@@ -24,10 +25,10 @@ public final class BackgroundRefreshScheduler {
     }
 
     private func registerTask() {
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: taskIdentifier, using: nil) { task in
-            self.handleRefresh(task: task as? BGAppRefreshTask)
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: self.taskIdentifier, using: nil) { [weak self] task in
+            self?.handleRefresh(task: task as? BGAppRefreshTask)
         }
-        Config.logger.info("Background task registered with identifier: \(taskIdentifier)")
+        Config.logger.info("Background task registered with identifier: \(self.taskIdentifier)")
     }
 
     private func handleRefresh(task: BGAppRefreshTask?) {

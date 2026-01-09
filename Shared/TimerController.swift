@@ -10,6 +10,7 @@ import UIKit
 #if os(watchOS)
 import WatchKit
 #endif
+import os.log
 
 public final class TimerController: ObservableObject {
     public static let shared = TimerController()

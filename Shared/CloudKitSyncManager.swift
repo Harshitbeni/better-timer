@@ -8,6 +8,7 @@
 import CloudKit
 import Combine
 import Foundation
+import os.log
 
 public final class CloudKitSyncManager: ObservableObject {
     public static let shared = CloudKitSyncManager()
