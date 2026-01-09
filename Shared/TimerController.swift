@@ -211,9 +211,30 @@ public final class TimerController: ObservableObject {
 #if canImport(ActivityKit)
     @available(iOS 16.1, *)
     private func requestLiveActivityIfNeeded(for timerID: UUID) async {
-        guard liveActivity == nil,
-              let entry = timers.first(where: { $0.id == timerID }),
-              ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        Config.logger.info("🔴 requestLiveActivityIfNeeded called for timer: \(timerID)")
+
+        // Check if Live Activity already exists
+        if liveActivity != nil {
+            Config.logger.info("🔴 Live Activity already exists, skipping")
+            return
+        }
+
+        // Check if timer entry exists
+        guard let entry = timers.first(where: { $0.id == timerID }) else {
+            Config.logger.error("🔴 Timer entry not found for ID: \(timerID)")
+            return
+        }
+
+        Config.logger.info("🔴 Timer found: \(entry.title)")
+
+        // Check if Live Activities are enabled
+        let authInfo = ActivityAuthorizationInfo()
+        Config.logger.info("🔴 Live Activities enabled: \(authInfo.areActivitiesEnabled)")
+
+        guard authInfo.areActivitiesEnabled else {
+            Config.logger.warning("🔴 Live Activities are not enabled. Enable in Settings → BetterTimer → Live Activities")
+            return
+        }
 
         let attributes = BetterTimerAttributes(
             timerID: entry.id,
@@ -228,15 +249,16 @@ public final class TimerController: ObservableObject {
         )
 
         do {
+            Config.logger.info("🔴 Attempting to start Live Activity...")
             let activity = try Activity.request(
                 attributes: attributes,
                 contentState: contentState
             )
             liveActivity = activity
             activityID = activity.id
-            Config.logger.info("Live Activity started for timer: \(entry.title)")
+            Config.logger.info("✅ Live Activity started for timer: \(entry.title)")
         } catch {
-            Config.logger.error("Failed to start Live Activity: \(error.localizedDescription)")
+            Config.logger.error("❌ Failed to start Live Activity: \(error.localizedDescription)")
         }
     }
 
